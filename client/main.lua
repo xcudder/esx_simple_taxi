@@ -1,4 +1,4 @@
-local car, driver, starting_point, dest, cfg = false, false, false, false, false
+local car, driver, starting_point, cfg = false, false, false, false, false
 
 function debug_message(msg)
 	if(Config.debug) then
@@ -8,7 +8,7 @@ function debug_message(msg)
 end
 
 function spawn_car()
-	local starting_point = GetEntityCoords(PlayerPedId())
+	starting_point = GetEntityCoords(PlayerPedId())
 	debug_message("Estabilished starting point")
 
 	while not HasModelLoaded(cfg.driver_hash) do
@@ -72,17 +72,24 @@ function get_going()
 
 			arrived = distance_to_destination < cfg.range
 			if arrived then
+				debug_message("We arrived")
 				DeletePed(driver)
 				ESX.Game.DeleteVehicle(car)
 
-				local distance = CalculateTravelDistanceBetweenPoints(starting_point.x, starting_point.y, starting_point.z, dest.x, dest.y, dest.z)
-				local cost = (distance/1000) * cfg.price_per_km
+				local distance = CalculateTravelDistanceBetweenPoints(
+					starting_point.x, starting_point.y, starting_point.z, dest.x, dest.y, dest.z
+				)
+				debug_message("We traveled " .. distance)
+
+				local price = (distance/1000) * cfg.price_per_km
+				debug_message("Ride cost: " .. price)				
+
 				ESX.TriggerServerCallback('esx_simple_taxi:pay', function(success)
 					if not success then
 						SetEntityCoords(PlayerPedId(), starting_point.x, starting_point.y, starting_point.z)
 					end
 					car, driver, starting_point, dest = false, false, false, false
-				end)
+				end, price)
 			else
 				debug_message("checking for arrival: Not close enough yet")
 			end 
